@@ -1,0 +1,10 @@
+﻿.vs
+Application/obj
+Domain/obj
+Infrastructure/obj
+RequestCustom/bin
+Tradesparq/bin
+TradesparqAPI/bin
+TradesparqAPI/obj
+RequestCustom/obj
+Tradesparq/obj
