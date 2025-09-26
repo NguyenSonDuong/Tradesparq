@@ -9,6 +9,7 @@ namespace Application.IRespostory.IInfo
 {
     public interface IPhoneNumberRespostory : IBaseRespostory<PhoneNumber>
     {
-        Task<int> CreateAll(List<String> phoneNumbers);
+        Task<int> CreateAll(int companyId, List<String> phoneNumbers);
+        Task<bool> Exits(int companyId, String phonenumber);
     }
 }

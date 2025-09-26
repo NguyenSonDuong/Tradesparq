@@ -9,6 +9,7 @@ namespace Application.IRespostory.IInfo
 {
     public interface IFaxRespostory : IBaseRespostory<Fax>
     {
-        Task<int> CreateAll(List<String> faxes);
+        Task<int> CreateAll(int companyId, List<String> faxes);
+        Task<bool> Exits(int companyId, String fax);
     }
 }

@@ -69,6 +69,8 @@ namespace DabacoControl.api
 
         // Config cho authen có thể chỉnh sửa trong config
         public static string AuthenticationKey = "Bearer";
+        private static int RefreshTokenQuantity = 5;
+        private static int ReCallRequestTimeDelay = 1000; // theo mms
 
         private readonly HttpClient httpClient;
         private string _host;
@@ -76,8 +78,6 @@ namespace DabacoControl.api
         private bool _isHttps ;
         private Dictionary<string, string> _headersDefault;
         private bool _isSaveHeader = true;
-        private static int RefreshTokenQuantity = 5;
-        private static int ReCallRequestTimeDelay = 1000; // theo mms
         public ApiBaseController()
         {
             httpClient = new HttpClient();
@@ -89,6 +89,8 @@ namespace DabacoControl.api
         public bool IsHttps { get => _isHttps; set => _isHttps = value; }
         public Dictionary<string, string> HeadersDefault { get => _headersDefault; set => _headersDefault = value; }
         public bool IsSaveHeader { get => _isSaveHeader; set => _isSaveHeader = value; }
+
+
 
         /// <summary>
         /// Hàm này có nhiệm vụ chuyển đổi các thong tin liên quan đến đường dẫn API thành 1 
@@ -193,7 +195,6 @@ namespace DabacoControl.api
                         }
                 }
                 
-                
                 if(HeadersDefault != null)
                 {
                     foreach (var header in HeadersDefault)
@@ -292,6 +293,31 @@ namespace DabacoControl.api
                 _logger.Error(ex, ex.Message);
                 throw;
             }
+        }
+
+        public void SetHost(string host)
+        {
+            this._host = host;
+        }
+
+        public void SetPort(int port)
+        {
+            this._port = port;
+        }
+
+        public void SetIsHttps(bool isHttps)
+        {
+            this._isHttps = isHttps;
+        }
+
+        public void SetHeadersDefault(Dictionary<string, string> headers)
+        {
+            this._headersDefault = headers;
+        }
+
+        public void SetIsSaveHaeder(bool isSaveHeader)
+        {
+            this._isSaveHeader = isSaveHeader;
         }
     }
 }

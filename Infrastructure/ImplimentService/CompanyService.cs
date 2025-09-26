@@ -55,11 +55,6 @@ namespace Infrastructure.ImplimentService
             _mapper = mapper;
         }
 
-        private string _token;
-        private string _dataSource;
-
-        public string Token { get => this._token; set => this._token = value; }
-        public string DataSource { get => this._dataSource; set => this._dataSource = value; }
 
         public async Task<int> GetAllCompany(SearchRequestDto.Root searchRequestDto)
         {
@@ -91,10 +86,12 @@ namespace Infrastructure.ImplimentService
                             _logger.LogInformation($"GetAllCompany - Info: Company Uuid: {item.info.uuid} exits in database");
                             continue;
                         }
-                        await _companyRespostory.Create(_mapper.Map<Company>(item));
+                        Company company = _mapper.Map<Company>(item.info);
+                        await _companyRespostory.Create(company);
+                       
                         if(item.info?.city != null)
                         {
-                            int success = await _cityRespostory.CreateAll(item.info.city);
+                            int success = await _cityRespostory.CreateAll(company.Id, item.info.city);
                             if(success != item.info.city.Count)
                             {
                                 _logger.LogError($"GetAllCompany - Error: Company Uuid: {item.info.uuid} - City: Inserted {success} of {item.info.city.Count}");
@@ -102,7 +99,7 @@ namespace Infrastructure.ImplimentService
                         }
                         if(item.info?.email != null)
                         {
-                            int success = await _emailRespostory.CreateAll(item.info.email);
+                            int success = await _emailRespostory.CreateAll(company.Id, item.info.email);
                             if(success != item.info.email.Count)
                             {
                                 _logger.LogError($"GetAllCompany - Error: Company Uuid: {item.info.uuid} - Email: Inserted {success} of {item.info.email.Count}");
@@ -110,7 +107,7 @@ namespace Infrastructure.ImplimentService
                         }
                         if(item.info?.fax != null)
                         {
-                            int success = await _faxRespostory.CreateAll(item.info.fax);
+                            int success = await _faxRespostory.CreateAll(company.Id, item.info.fax);
                             if(success != item.info.fax.Count)
                             {
                                 _logger.LogError($"GetAllCompany - Error: Company Uuid: {item.info.uuid} - Fax: Inserted {success} of {item.info.fax.Count}");
@@ -118,7 +115,7 @@ namespace Infrastructure.ImplimentService
                         }
                         if(item.info?.phone != null)
                         {
-                            int success = await _phoneRespostory.CreateAll(item.info.phone);
+                            int success = await _phoneRespostory.CreateAll(company.Id, item.info.phone);
                             if(success != item.info.phone.Count)
                             {
                                 _logger.LogError($"GetAllCompany - Error: Company Uuid: {item.info.uuid} - Phone: Inserted {success} of {item.info.phone.Count}");
@@ -126,15 +123,13 @@ namespace Infrastructure.ImplimentService
                         }
                         if(item.info?.postal_code != null)
                         {
-                            int success = await _postalCodeRespostory.CreateAll(item.info.postal_code);
+                            int success = await _postalCodeRespostory.CreateAll(company.Id, item.info.postal_code);
                             if(success != item.info.postal_code.Count)
                             {
                                 _logger.LogError($"GetAllCompany - Error: Company Uuid: {item.info.uuid} - PostalCode: Inserted {success} of {item.info.postal_code.Count}");
                             }
                         }
                     }
-                   
-
                 }
             }
             catch (Exception ex)

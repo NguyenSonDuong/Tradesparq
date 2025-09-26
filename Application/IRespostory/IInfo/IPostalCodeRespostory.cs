@@ -9,6 +9,7 @@ namespace Application.IRespostory.IInfo
 {
     public interface IPostalCodeRespostory : IBaseRespostory<PostalCode>
     {
-        Task<int> CreateAll(List<String> postalCodes);
+        Task<int> CreateAll(int companyId, List<String> postalCodes);
+        Task<bool> Exits(int companyId, String postalCode);
     }
 }

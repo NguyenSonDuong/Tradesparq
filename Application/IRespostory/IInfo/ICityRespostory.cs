@@ -9,6 +9,7 @@ namespace Application.IRespostory.IInfo
 {
     public interface ICityRespostory : IBaseRespostory<City>
     {
-        Task<int> CreateAll(List<String> cities);
+        Task<int> CreateAll(int companyId,List<String> cities);
+        Task<bool> Exits(int companyId, String city);
     }
 }

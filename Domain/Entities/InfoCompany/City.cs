@@ -10,7 +10,7 @@ namespace Domain.Entities.InfoCompany
     {
         public int Id { get; set; }
         public int CompanyId { get; set; }
-        public int TypeInfo { get; set; }
+        public int TypeInfo { get; set; } = 1;
         public string CityName { get; set; }
     }
 }

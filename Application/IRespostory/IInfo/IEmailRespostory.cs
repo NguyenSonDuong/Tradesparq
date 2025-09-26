@@ -9,6 +9,7 @@ namespace Application.IRespostory.IInfo
 {
     public interface IEmailRespostory : IBaseRespostory<Email>
     {
-        Task<int> CreateAll(List<String> emails);
+        Task<int> CreateAll(int companyId, List<String> emails);
+        Task<bool> Exits(int companyId, String email);
     }
 }

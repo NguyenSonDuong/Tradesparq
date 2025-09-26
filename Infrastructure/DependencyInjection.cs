@@ -10,6 +10,11 @@ using System.Threading.Tasks;
 using Application.IRespostory;
 using Infrastructure.ImplimentRespostory;
 using Application.IRespostory.IInfo;
+using Infrastructure.ImplimentRespostory.Info;
+using Application.IService;
+using Infrastructure.ImplimentService;
+using CrawlService.Controller;
+using DabacoControl.api;
 
 namespace Infrastructure
 {
@@ -34,9 +39,21 @@ namespace Infrastructure
                     opt.EnableSensitiveDataLogging();
                 }
             });
-            services.Database.MigrateAsync()
-
+           
             services.AddScoped<ICompanyRespostory, CompanyRespostory>();
+
+            services.AddScoped<IEmailRespostory, EmailRespostory>();
+            services.AddScoped<IPhoneNumberRespostory, PhoneNumberRespostory>();
+            services.AddScoped<IFaxRespostory, FaxRespostory>();
+            services.AddScoped<IPostalCodeRespostory, PostalCodeRespostory>();
+            services.AddScoped<ICityRespostory, CityRespostory>();
+
+            services.AddScoped<IApiBaseController, ApiBaseController>();
+            services.AddScoped<IRequestService, RequestService>();
+            services.AddScoped<ICompanyService, CompanyService>();
+
+
+
             return services;
         }
     }

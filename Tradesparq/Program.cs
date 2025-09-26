@@ -17,7 +17,6 @@ using Tradesparq.ProfileMapper;
 using Tradesparq.Respostory;
 using Tradesparq.Respostory.Abtrac;
 using Tradesparq.Service;
-using TradesparqDBContext;
 using AutoMapper;
 using Infrastructure;
 var builder = Host.CreateApplicationBuilder(args);
@@ -31,7 +30,6 @@ builder.Configuration
 var logger = LogManager.Setup().LoadConfigurationFromFile("NLog.config", optional: true)
                                .GetCurrentClassLogger();
 logger.Info("Setting Database");
-AppDbContext db; 
 try
 {
 
