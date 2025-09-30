@@ -9,3 +9,7 @@ TradesparqAPI/obj
 RequestCustom/obj
 Tradesparq/obj
 Api/obj
+Api/bin
+Application/bin
+Domain/bin
+Infrastructure/bin

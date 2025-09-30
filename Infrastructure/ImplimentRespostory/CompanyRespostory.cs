@@ -14,7 +14,7 @@ namespace Infrastructure.ImplimentRespostory
 {
     public class CompanyRespostory : ICompanyRespostory
     {
-        private readonly AppDbContext _db;
+        private AppDbContext _db;
 
         public CompanyRespostory(AppDbContext db) => _db = db;
 
@@ -89,7 +89,7 @@ namespace Infrastructure.ImplimentRespostory
             throw new NotImplementedException();
         }
 
-        public Task<Company> GetAll()
+        public Task<List<Company>> GetAll()
         {
             throw new NotImplementedException();
         }

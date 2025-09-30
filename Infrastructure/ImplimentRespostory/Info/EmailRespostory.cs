@@ -13,7 +13,7 @@ namespace Infrastructure.ImplimentRespostory.Info
 {
     public class EmailRespostory : IEmailRespostory
     {
-        private readonly AppDbContext _db;
+        private AppDbContext _db;
         public EmailRespostory(AppDbContext db) => _db = db;
         public Task<bool> Create(Email dto)
         {
@@ -71,7 +71,7 @@ namespace Infrastructure.ImplimentRespostory.Info
             throw new NotImplementedException();
         }
 
-        public Task<Email> GetAll()
+        public Task<List<Email>> GetAll()
         {
             throw new NotImplementedException();
         }

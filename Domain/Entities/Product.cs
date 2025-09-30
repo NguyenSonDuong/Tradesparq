@@ -7,13 +7,11 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class Products : BaseEntity
+    public class Product : BaseEntity
     {
         public int Id { get; set; }
-
-        public string Product { get; set; }
+        public string Code { get; set; }
+        public string name { get; set; }
         public string Description { get; set; }
-
-
     }
 }

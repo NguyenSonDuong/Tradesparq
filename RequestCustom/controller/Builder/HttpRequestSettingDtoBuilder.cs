@@ -64,13 +64,19 @@ namespace DabacoControl.Builder
         public HttpRequestSettingDtoBuilder SetBody(Dictionary<string, dynamic> body)
         {
             _dto.Body = body;
-            _dto.BodyJson = JsonConvert.SerializeObject(body);
+            _dto.BodyJson = JsonConvert.SerializeObject(body, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            });
             return this;
         }
         public HttpRequestSettingDtoBuilder SetBody(Object body)
         {
             _dto.Body = body;
-            _dto.BodyJson = JsonConvert.SerializeObject(body);
+            _dto.BodyJson = JsonConvert.SerializeObject(body, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            });
             return this;
         }
         public HttpRequestSettingDtoBuilder SetHeaders(Dictionary<string, dynamic> headers)

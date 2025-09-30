@@ -1,4 +1,6 @@
 ﻿using Domain.Entities;
+using Domain.Entities.Authen;
+using Domain.Entities.EntityAnalysis;
 using Domain.Entities.InfoCompany;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -20,11 +22,31 @@ namespace Infrastructure.DBContext
         public DbSet<PhoneNumber> PhoneNumbers => Set<PhoneNumber>();
         public DbSet<PostalCode> PostalCodes => Set<PostalCode>();
         public DbSet<Shipment> Shipments => Set<Shipment>();
+        public DbSet<RequestSearchHisory> RequestSearchHisories => Set<RequestSearchHisory>();
+        public DbSet<AuthenTradesparq> AuthenTradesparqs => Set<AuthenTradesparq>();
+
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasCharSet("utf8mb4").UseCollation("utf8mb4_unicode_ci");
 
+            // Company
+            modelBuilder.Entity<RequestSearchHisory>(e =>
+            {
+                e.ToTable("RequestSearchHisory");
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Id).ValueGeneratedOnAdd();
+
+            });
+            // Company
+            modelBuilder.Entity<AuthenTradesparq>(e =>
+            {
+                e.ToTable("AuthenTradesparq");
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Id).ValueGeneratedOnAdd();
+
+            });
             // Company
             modelBuilder.Entity<Company>(e =>
             {

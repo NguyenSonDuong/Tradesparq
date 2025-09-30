@@ -12,7 +12,7 @@ namespace Application.IRespostory
         Task<bool> Update(T dto);
         Task<bool> Delete(int id);
         Task<T> Get(int id);
-        Task<T> GetAll();
+        Task<List<T>> GetAll();
 
     }
 }

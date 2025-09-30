@@ -10,5 +10,6 @@ namespace Application.Respostory
 {
     public interface IShippentRespostory : IBaseRespostory<Shipment>
     {
+        Task<bool> Exit(string shipmentId);
     }
 }

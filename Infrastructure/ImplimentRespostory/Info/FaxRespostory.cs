@@ -13,7 +13,7 @@ namespace Infrastructure.ImplimentRespostory.Info
 {
     public class FaxRespostory : IFaxRespostory
     {
-        private readonly AppDbContext _db;
+        private AppDbContext _db;
         public FaxRespostory(AppDbContext db) => _db = db;
         public Task<bool> Create(Fax dto)
         {
@@ -70,7 +70,7 @@ namespace Infrastructure.ImplimentRespostory.Info
             throw new NotImplementedException();
         }
 
-        public Task<Fax> GetAll()
+        public Task<List<Fax>> GetAll()
         {
             throw new NotImplementedException();
         }

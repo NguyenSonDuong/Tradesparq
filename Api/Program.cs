@@ -5,6 +5,7 @@ using Infrastructure;
 using Infrastructure.DBContext;
 using Infrastructure.ImplimentJob;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Console;
 using NLog;
 using NLog.Web;
 
@@ -19,45 +20,68 @@ try
     builder.Services.AddSwaggerGen();
 
     builder.Logging.ClearProviders();
+    builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", Microsoft.Extensions.Logging.LogLevel.None);
+    builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", Microsoft.Extensions.Logging.LogLevel.Warning);
     builder.Host.UseNLog();
 
+    builder.Services.AddAutoMapper(typeof(RequestMapper));
+    // Đăng ký các dịch vụ từ Infrastructure
+    builder.Services.AddInfrastructure(builder.Configuration);
+
+    // Cấu hình option cho job
+    builder.Services.Configure<AutoCrawlJobOption>(builder.Configuration.GetSection("Jobs:MyJob"));
+    builder.Services.AddSingleton(res => res.GetRequiredService<Microsoft.Extensions.Options.IOptions<AutoCrawlJobOption>>().Value);
+    //var cs = builder.Configuration.GetConnectionString("DefaultConnection")
+    //         ?? throw new InvalidOperationException("Missing ConnectionStrings:Default.");
+    //builder.Services.AddDbContext<AppDbContext>(opt =>
+    //{
+    //    opt.UseMySql(
+    //        cs,
+    //        ServerVersion.AutoDetect(cs),
+    //        my => my.EnableRetryOnFailure()
+    //                .MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)
+    //    );
+    //    opt.EnableSensitiveDataLogging(false);
+    //    opt.EnableDetailedErrors(true);
+    //});
+    // Đăng ký hosted service chạy nền
+    builder.Services.AddHostedService<AutoCrawlJobService>();
+    builder.Logging.AddSimpleConsole(o =>
+    {
+        o.ColorBehavior = LoggerColorBehavior.Enabled; // ép bật màu
+        o.SingleLine = false;
+    });
     var app = builder.Build();
-
-
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
         app.UseSwaggerUI();
     }
-    builder.Services.AddAutoMapper(typeof(RequestMapper).Assembly);
-    builder.Services.AddInfrastructure(builder.Configuration);
-    // Cấu hình option cho job
-    builder.Services.Configure<AutoCrawlJobOption>(builder.Configuration.GetSection("Jobs:MyJob"));
 
-    // Đăng ký job thực thi
-    builder.Services.AddScoped<IAutoCrawlJob, AutoCrawlJob>();
-
-    // Đăng ký hosted service chạy nền
-    builder.Services.AddHostedService<AutoCrawlJobService>();
     using (var scope = app.Services.CreateScope())
     {
         var cfg = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
         var auto = cfg.GetValue("EfCore:AutoMigrate", defaultValue: false);
-
-        if (auto || app.Environment.IsDevelopment())
+        static bool IsEfDesignTime()
+        => AppDomain.CurrentDomain.GetAssemblies()
+       .Any(a => a.GetName().Name == "Microsoft.EntityFrameworkCore.Design");
+        if (!IsEfDesignTime())
         {
-            try
+            if (auto || app.Environment.IsDevelopment())
             {
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                logger.Info("Applying EF Core migrations...");
-                await db.Database.MigrateAsync();
-                logger.Info("EF Core migrations applied.");
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex, "EF Core migration failed at startup.");
-                throw; // tuỳ bạn: dừng app nếu migrate fail
+                try
+                {
+                    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    logger.Info("Applying EF Core migrations...");
+                    await db.Database.MigrateAsync();
+                    logger.Info("EF Core migrations applied.");
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "EF Core migration failed at startup.");
+                    throw; // tuỳ bạn: dừng app nếu migrate fail
+                }
             }
         }
     }

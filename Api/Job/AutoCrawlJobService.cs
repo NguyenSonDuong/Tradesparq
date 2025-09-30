@@ -7,27 +7,50 @@ namespace Api.Job
 {
     public sealed class AutoCrawlJobService : BackgroundService
     {
-        private readonly IServiceProvider _sp;
-        private readonly ILogger<AutoCrawlJobService> _log;
-        private readonly AutoCrawlJobOption _opt;
+        private readonly IServiceScopeFactory _sp;
+        private readonly ILogger<IAutoCrawlJob> _log;
+        private  AutoCrawlJobOption _opt;
         private readonly SemaphoreSlim _gate = new(1, 1);
+       
+        public AutoCrawlJobService(IServiceScopeFactory sp, ILogger<IAutoCrawlJob> log, AutoCrawlJobOption opt)
+        {
+            _sp = sp;
+            _log = log;
+            _opt = opt;
+            
+        }
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _log.LogInformation("MyJobHostedService started. Interval={Interval}s, RunOnStart={RunOnStart}",
-            _opt.IntervalSeconds, _opt.RunOnStart);
-
-            if (_opt.RunOnStart)
-                await RunOnceSafeAsync(stoppingToken);
-
-            // .NET 6+ PeriodicTimer: ổn định, không lệch nhịp
-            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(_opt.IntervalSeconds));
-
             try
             {
-                while (await timer.WaitForNextTickAsync(stoppingToken))
-                    await RunOnceSafeAsync(stoppingToken);
+                _log.LogInformation("MyJobHostedService started. Interval={Interval}s, RunOnStart={RunOnStart}",
+                _opt.IntervalSeconds, _opt.RunOnStart);
+                
+
+                // .NET 6+ PeriodicTimer: ổn định, không lệch nhịp
+
+                using var timer = new PeriodicTimer(TimeSpan.FromSeconds(_opt.IntervalSeconds));
+
+                try
+                {
+                    if (_opt.RunOnStart)
+                        await RunOnceSafeAsync(stoppingToken);
+                    while (await timer.WaitForNextTickAsync(stoppingToken))
+                    {
+
+                        await RunOnceSafeAsync(stoppingToken);
+                        _log.LogInformation("Delay: Đang chờ chạy lại...");
+                        await Task.Delay(5000, stoppingToken);
+                    }
+
+                }
+                catch (OperationCanceledException) { /* app stopping */ }
             }
-            catch (OperationCanceledException) { /* app stopping */ }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "AutoCrawlJobService - Error: ");
+            }
         }
         private async Task RunOnceSafeAsync(CancellationToken ct)
         {
@@ -39,9 +62,11 @@ namespace Api.Job
 
             try
             {
-                using var scope = _sp.CreateScope();
-                var job = scope.ServiceProvider.GetRequiredService<IAutoCrawlJob>();
-                await job.ExecuteAsync(ct);
+                using var scope1 = _sp.CreateScope();
+                IAutoCrawlJob job1 = scope1.ServiceProvider.GetRequiredService<IAutoCrawlJob>();
+                await job1.ExecuteAsync(ct);
+
+                //await Task.WhenAll(t1, t2);
             }
             catch (OperationCanceledException)
             {

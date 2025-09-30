@@ -12,7 +12,7 @@ namespace Infrastructure.ImplimentRespostory.Info
 {
     public class CityRespostory : ICityRespostory
     {
-        private readonly AppDbContext _db;
+        private AppDbContext _db;
         public CityRespostory(AppDbContext db) => _db = db;
 
         public Task<bool> Create(City dto)
@@ -70,7 +70,7 @@ namespace Infrastructure.ImplimentRespostory.Info
             throw new NotImplementedException();
         }
 
-        public Task<City> GetAll()
+        public Task<List<City>> GetAll()
         {
             throw new NotImplementedException();
         }

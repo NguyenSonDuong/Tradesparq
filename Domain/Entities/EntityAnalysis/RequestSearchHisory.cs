@@ -9,11 +9,13 @@ namespace Domain.Entities.EntityAnalysis
 {
     public class RequestSearchHisory : BaseEntity
     {
-        public string Keyword { get; set; }
-        public int TypeSearch { get; set; }
-        public int ResultCount { get; set; }
-        public int TotalCount { get; set; }
-        public int NumberRequest { get; set; }
-        public DateTime SearchDate { get; set; }
+        public string? Keyword { get; set; }
+        public string? TypeSearch { get; set; } // 1: Company, 2: Person
+        public string? KeySearch { get; set; } // The actual search key used
+        public string? ExDataSearch { get; set; } // Extra data related to the search
+        public int? ResultCount { get; set; } // Number of results returned
+        public bool? IsSuccess { get; set; } // Indicates if the search was successful
+        public int? StatusCode { get; set; } // Status code of the search operation
+        public DateTime? SearchDate { get; set; }
     }
 }

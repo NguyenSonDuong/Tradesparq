@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace Application.Dto.Keys
 {
-    public class StatusNumberKey
+    public class StatusAuthen
     {
-        public static int Success = 200000;
+        public static int Active = 1;
+        public static int Disactive = 0;
+        public static int NotFount = -1;
     }
 }

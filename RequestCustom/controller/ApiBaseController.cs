@@ -77,7 +77,7 @@ namespace DabacoControl.api
         private int _port;
         private bool _isHttps ;
         private Dictionary<string, string> _headersDefault;
-        private bool _isSaveHeader = true;
+        private bool _isSaveHeader = false;
         public ApiBaseController()
         {
             httpClient = new HttpClient();
@@ -88,7 +88,7 @@ namespace DabacoControl.api
         public int Port { get => _port; set => _port = value; }
         public bool IsHttps { get => _isHttps; set => _isHttps = value; }
         public Dictionary<string, string> HeadersDefault { get => _headersDefault; set => _headersDefault = value; }
-        public bool IsSaveHeader { get => _isSaveHeader; set => _isSaveHeader = value; }
+        public bool IsSaveHeader { get => _isSaveHeader; set => _isSaveHeader = value; } 
 
 
 
@@ -186,23 +186,29 @@ namespace DabacoControl.api
                 if (string.IsNullOrEmpty(url))
                     throw new RequestException(MessageErrorModel.RequestUrlErrorOrConvertUrlError);
 
-                if (_isSaveHeader)
+                
+
+                if (httpRequestSetting.Headers != null && httpRequestSetting.Headers.Count > 0)
                 {
-                    if (httpRequestSetting.Headers != null && httpRequestSetting.Headers.Count > 0)
-                        foreach (var header in httpRequestSetting.Headers)
+                    foreach (var header in httpRequestSetting.Headers)
+                    {
+                        bool exists = httpClient.DefaultRequestHeaders.Any(kv => string.Equals(kv.Key, "ts-token",
+                                            StringComparison.OrdinalIgnoreCase));
+                        if(exists)
+                        {
+                            httpClient.DefaultRequestHeaders.Remove(header.Key);
+                        }
+                        try
                         {
                             httpClient.DefaultRequestHeaders.Add(header.Key, header.Value);
                         }
-                }
-                
-                if(HeadersDefault != null)
-                {
-                    foreach (var header in HeadersDefault)
-                    {
-                        httpClient.DefaultRequestHeaders.Add(header.Key, header.Value);
+                        catch (Exception ex)
+                        {
+                            continue;
+                        }
                     }
-                }
-
+                }   
+                
                 if (!string.IsNullOrEmpty(httpRequestSetting.Authorization))
                     httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(ApiBaseController.AuthenticationKey, httpRequestSetting.Authorization);
                 _logger.Info($"[Request] Gửi request đến: {url} với phương thức {httpRequestSetting.Method}");
@@ -313,6 +319,25 @@ namespace DabacoControl.api
         public void SetHeadersDefault(Dictionary<string, string> headers)
         {
             this._headersDefault = headers;
+            if (!_isSaveHeader)
+            {
+                if (HeadersDefault != null)
+                {
+                    httpClient.DefaultRequestHeaders.Clear();
+                    foreach (var header in HeadersDefault)
+                    {
+                        try
+                        {
+                            httpClient.DefaultRequestHeaders.Add(header.Key, header.Value);
+                        }
+                        catch (Exception ex)
+                        {
+                            continue;
+                        }
+
+                    }
+                }
+            }
         }
 
         public void SetIsSaveHaeder(bool isSaveHeader)

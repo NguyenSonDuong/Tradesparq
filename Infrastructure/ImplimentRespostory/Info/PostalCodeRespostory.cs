@@ -1,6 +1,8 @@
-﻿using Application.IRespostory.IInfo;
+﻿using Application.IRespostory;
+using Application.IRespostory.IInfo;
 using Domain.Entities.InfoCompany;
 using Infrastructure.DBContext;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +13,7 @@ namespace Infrastructure.ImplimentRespostory.Info
 {
     public class PostalCodeRespostory : IPostalCodeRespostory
     {
-        private readonly AppDbContext _db;
+        private AppDbContext _db;
         public PostalCodeRespostory(AppDbContext db) => _db = db;
         public Task<bool> Create(PostalCode dto)
         {
@@ -51,9 +53,16 @@ namespace Infrastructure.ImplimentRespostory.Info
             throw new NotImplementedException();
         }
 
-        public Task<bool> Exits(int companyId, string postalCode)
+        public async Task<bool> Exits(int companyId, string postalCode)
         {
-            throw new NotImplementedException();
+            try
+            {
+                return await _db.PostalCodes.AnyAsync(c => c.CompanyId == companyId && c.PostalCodeNumber == postalCode);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         public Task<PostalCode> Get(int id)
@@ -61,12 +70,12 @@ namespace Infrastructure.ImplimentRespostory.Info
             throw new NotImplementedException();
         }
 
-        public Task<PostalCode> GetAll()
+        public Task<bool> Update(PostalCode dto)
         {
             throw new NotImplementedException();
         }
 
-        public Task<bool> Update(PostalCode dto)
+        public Task<List<PostalCode>> GetAll()
         {
             throw new NotImplementedException();
         }

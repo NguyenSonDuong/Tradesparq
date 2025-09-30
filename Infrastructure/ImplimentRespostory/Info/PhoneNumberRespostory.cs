@@ -1,4 +1,5 @@
-﻿using Application.IRespostory.IInfo;
+﻿using Application.IRespostory;
+using Application.IRespostory.IInfo;
 using Domain.Entities.InfoCompany;
 using Infrastructure.DBContext;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,7 @@ namespace Infrastructure.ImplimentRespostory.Info
 {
     public class PhoneNumberRespostory : IPhoneNumberRespostory
     {
-        private readonly AppDbContext _db;
+        private AppDbContext _db;
         public PhoneNumberRespostory(AppDbContext db) => _db = db;
         public Task<bool> Create(PhoneNumber dto)
         {
@@ -69,14 +70,15 @@ namespace Infrastructure.ImplimentRespostory.Info
             throw new NotImplementedException();
         }
 
-        public Task<PhoneNumber> GetAll()
+        public Task<bool> Update(PhoneNumber dto)
         {
             throw new NotImplementedException();
         }
 
-        public Task<bool> Update(PhoneNumber dto)
+
+        public Task<List<PhoneNumber>> GetAll()
         {
-            throw new NotImplementedException();
+            return GetAll();
         }
     }
 }
