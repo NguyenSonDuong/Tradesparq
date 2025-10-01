@@ -10,5 +10,7 @@ namespace Application.IRespostory.IAuthen
     public interface IAuthenTradesparqRespostory : IBaseRespostory<AuthenTradesparq>
     {
         Task<AuthenTradesparq> GetTokenActive();
+
+        Task<bool> Create(string token, string datasource);
     }
 }

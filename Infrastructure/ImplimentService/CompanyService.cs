@@ -70,55 +70,28 @@ namespace Infrastructure.ImplimentService
             try
             {
                 CompanyAnalysisDto companyAnalysis = new CompanyAnalysisDto();
+                // Lấy token từ Database
                 AuthenTradesparq authen = await _authenTradesparqRespostory.GetTokenActive();
                 if (authen == null || string.IsNullOrEmpty(authen.Token))
                 {
-                    _logger.LogError($"GetAllCompany - Error: Token không có vui lòng kiểm tra lại");
                     throw new RequestErrorException($"GetAllCompany - Error: Token không có vui lòng kiểm tra lại");
                 }
+
                 _requestService.Token = authen.Token;
                 _requestService.DataSource = authen.dataSourch;
 
+                // Lấy thông tin Company từ Tradesparq
                 SearchCompanyResponsivDto.Root root = await _requestService.GetCompany(searchRequestDto);
                 if(root == null || root.data == null)
                 {
-                    await _requestSearchHistoryRespostory.Create(new RequestSearchHisory
-                    {
-                        Keyword = searchRequestDto.prod_desc,
-                        ExDataSearch = null,
-                        IsDeleted = false,
-                        IsSuccess = false,
-                        StatusCode = root.code,
-                        ResultCount = -1,
-                        SearchDate = DateTime.Now,
-                        TypeSearch = "Company", // 1: Company
-                        KeySearch = searchRequestDto.prod_desc,
-                    });
                     throw new RequestErrorException("Lỗi gửi request tới Tradesparq");
                 }
 
                 companyAnalysis.total = root.data.numBuckets;
                 companyAnalysis.count = root.data.buckets.Count;
 
-                bool isSaveHistory = await _requestSearchHistoryRespostory.Create(new RequestSearchHisory
-                {
-                   Keyword = searchRequestDto.prod_desc,
-                   ExDataSearch = null,
-                   IsDeleted = false,
-                   IsSuccess = true,
-                   StatusCode = StatusNumberKey.Success,
-                   ResultCount = root.data.buckets.Count,
-                   SearchDate = DateTime.Now,
-                   TypeSearch = "Company", // 1: Company
-                   KeySearch = searchRequestDto.prod_desc,
-                });
-                if(isSaveHistory == false)
-                {
-                    _logger.LogError($"GetAllCompany - Error: Lưu lịch sử tìm kiếm không thành công");
-                }
                 if (root == null || root.code != StatusNumberKey.Success)
                 {
-                    _logger.LogError($"GetAllCompany - Error: Status: {root.code} Message: {root.data}");
                     throw new RequestErrorException($"GetAllCompany - Error: Status: {root.code} Message: {root.data}");
                 }
                 // Sau khi request thành công sẽ reset biến đếm lỗi về 0 

@@ -61,5 +61,24 @@ namespace Infrastructure.ImplimentRespostory.Authen
                 throw;
             }   
         }
+
+        public async Task<bool> Create(string token, string datasource)
+        {
+            try
+            {
+                AuthenTradesparq authenTradesparq = new AuthenTradesparq
+                {
+                    Token = token,
+                    dataSourch = datasource,
+                    Status = StatusAuthen.Active,
+                    IsDeleted = false
+                };
+                return await Create(authenTradesparq);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
     }
 }

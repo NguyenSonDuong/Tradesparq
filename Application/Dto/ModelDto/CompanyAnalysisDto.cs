@@ -11,5 +11,6 @@ namespace Application.Dto.ModelDto
         public int companyId { get; set; }
         public int total { get; set; }
         public int count { get; set; }
+        public int StatusCode { get; set; }
     }
 }

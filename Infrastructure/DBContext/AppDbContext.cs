@@ -1,5 +1,6 @@
 ﻿using Domain.Entities;
 using Domain.Entities.Authen;
+using Domain.Entities.command;
 using Domain.Entities.EntityAnalysis;
 using Domain.Entities.InfoCompany;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,9 @@ namespace Infrastructure.DBContext
         public DbSet<Shipment> Shipments => Set<Shipment>();
         public DbSet<RequestSearchHisory> RequestSearchHisories => Set<RequestSearchHisory>();
         public DbSet<AuthenTradesparq> AuthenTradesparqs => Set<AuthenTradesparq>();
+        public DbSet<Command> Commands => Set<Command>();
+
+        
 
         
 
@@ -57,7 +61,16 @@ namespace Infrastructure.DBContext
                 e.HasIndex(x => x.Uuid).IsUnique();
 
             });
+            // Command
+            modelBuilder.Entity<Command>(e =>
+            {
+                e.ToTable("Command");
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Id).ValueGeneratedOnAdd();
+                e.Property(x => x.SearchKey).IsRequired().HasMaxLength(50);
+                e.Property(x => x.TypeSearch).IsRequired().HasMaxLength(50);
 
+            });
             modelBuilder.Entity<Shipment>(e =>
             {
                 e.ToTable("Shipment");

@@ -67,40 +67,12 @@ namespace Infrastructure.ImplimentService
                 SearchResponsiveDto.Root root = await _requestService.GetShipment(searchRequestDto);
                 if (root == null || root.data == null)
                 {
-                    await _requestSearchHistoryRespostory.Create(new RequestSearchHisory
-                    {
-                        Keyword = searchRequestDto.prod_desc,
-                        ExDataSearch = null,
-                        IsDeleted = false,
-                        IsSuccess = false,
-                        StatusCode = StatusNumberKey.Success,
-                        ResultCount = -1,
-                        SearchDate = DateTime.Now,
-                        TypeSearch = "Shipment", // 1: Company
-                        KeySearch = searchRequestDto.prod_desc,
-                    });
                     throw new RequestErrorException("SaveAllShipment - Error: Lỗi gửi request tới Tradesparq");
                 }
 
                 companyAnalysis.total = root.data.numFound;
                 companyAnalysis.count = root.data.docs.Count;
 
-                bool isSaveHistory = await _requestSearchHistoryRespostory.Create(new RequestSearchHisory
-                {
-                    Keyword = searchRequestDto.prod_desc,
-                    ExDataSearch = JsonConvert.SerializeObject(searchRequestDto),
-                    IsDeleted = false,
-                    IsSuccess = true,
-                    StatusCode = StatusNumberKey.Success,
-                    ResultCount = root.data.docs.Count,
-                    SearchDate = DateTime.Now,
-                    TypeSearch = "Shipment", // 1: Company
-                    KeySearch = searchRequestDto.prod_desc,
-                });
-                if (isSaveHistory == false)
-                {
-                    _logger.LogError($"SaveAllShipment - Error: Lưu lịch sử tìm kiếm không thành công");
-                }
                 if (root == null || root.code != StatusNumberKey.Success)
                 {
                     _logger.LogError($"SaveAllShipment - Error: Status: {root.code} Message: {root.data}");

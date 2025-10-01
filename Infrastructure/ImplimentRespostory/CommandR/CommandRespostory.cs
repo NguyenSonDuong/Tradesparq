@@ -1,0 +1,142 @@
+﻿using Application.IRespostory.ICommand;
+using Domain.Entities.command;
+using Infrastructure.DBContext;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+namespace Infrastructure.ImplimentRespostory.CommandR
+{
+    public class CommandRespostory : ICommandRespostory
+    {
+        private AppDbContext _db;
+
+        public CommandRespostory(AppDbContext db) => _db = db;
+
+        public async Task<bool> CloseCommand(int id)
+        {
+            try
+            {
+                Command command = await _db.Commands.Where(c => c.Id == id && c.IsCompleted == true).FirstOrDefaultAsync();
+                if (command == null)
+                {
+                    throw new Exception($"CloseCommand - Error: Not found command with id {id} or command is closed");
+                }
+                command.IsCompleted = true;
+                _db.Commands.Update(command);
+                await _db.SaveChangesAsync();
+                return true;
+            }
+            catch(Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<bool> Create(Command dto)
+        {
+            try
+            {
+                _db.Commands.Add(dto);
+                await _db.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> CreateCommand(Command command)
+        {
+            try
+            {
+                _db.Commands.Add(command);
+                await _db.SaveChangesAsync();
+                return command.Id;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<bool> Delete(int id)
+        {
+            try
+            {
+                Command command = await _db.Commands.Where(c => c.Id == id).FirstOrDefaultAsync();
+                command.IsDeleted = true;
+                _db.Commands.Update(command);
+                await _db.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<Command> Get(int id)
+        {
+            try
+            {
+                Command command = await _db.Commands.Where(c => c.Id == id).FirstOrDefaultAsync();
+                return command;
+            }
+            catch(Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<List<Command>> GetAll()
+        {
+            try
+            {
+                List<Command> listCommand = await _db.Commands.ToListAsync();
+                return listCommand;
+            }
+            catch(Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<List<Command>> GetAllCommandActive()
+        {
+            try
+            {
+                List<Command> commands = await _db.Commands
+                    .Where(c => c.IsCompleted == false)
+                    .OrderBy(c => c.CreatedAt)
+                    .ToListAsync();
+                return commands;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<Command> GetCommandQueue()
+        {
+            try
+            {
+                Command command = await _db.Commands.Where(c => c.IsCompleted == false).OrderBy(c => c.CreatedAt).FirstOrDefaultAsync();
+                return command;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public Task<bool> Update(Command dto)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
