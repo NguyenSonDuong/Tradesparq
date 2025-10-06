@@ -9,6 +9,7 @@ namespace Application.Dto.Keys
     public class SearchProdDesc
     {
         public static string Company = "supplier";
+        public static string Buyer = "buyer";
         public static string Shippent = "record";
     }
 }

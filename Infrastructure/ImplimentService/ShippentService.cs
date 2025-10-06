@@ -15,6 +15,7 @@ using Domain.Entities;
 using Domain.Entities.Authen;
 using Domain.Entities.EntityAnalysis;
 using Infrastructure.ExceptionInfastructure;
+using Infrastructure.Helper;
 using Infrastructure.ImplimentRespostory;
 using Infrastructure.ImplimentRespostory.Info;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -58,7 +60,7 @@ namespace Infrastructure.ImplimentService
                 AuthenTradesparq authen = await _authenTradesparqRespostory.GetTokenActive();
                 if (authen == null || string.IsNullOrEmpty(authen.Token))
                 {
-                    _logger.LogError($"SaveAllShipment - Error: Token không có vui lòng kiểm tra lại");
+                    ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"Token không có vui lòng kiểm tra lại");
                     throw new RequestErrorException($"SaveAllShipment - Error: Token không có vui lòng kiểm tra lại");
                 }
                 _requestService.Token = authen.Token;
@@ -67,6 +69,14 @@ namespace Infrastructure.ImplimentService
                 SearchResponsiveDto.Root root = await _requestService.GetShipment(searchRequestDto);
                 if (root == null || root.data == null)
                 {
+                    if (root != null && (root.code == 403 || root.code == 402))
+                    {
+                        await _authenTradesparqRespostory.Deactive(authen.Id);
+                        ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"Token hết hạn vui lòng kiểm tra lại");
+                        _logger.LogError($"GetAllCompany - Error: Token hết hạn vui lòng kiểm tra lại");
+                        throw new RequestErrorException($"GetAllCompany - Error: Token hết hạn vui lòng kiểm tra lại");
+                    }
+                    ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"Lỗi gửi request tới Tradesparq");
                     throw new RequestErrorException("SaveAllShipment - Error: Lỗi gửi request tới Tradesparq");
                 }
 
@@ -75,6 +85,7 @@ namespace Infrastructure.ImplimentService
 
                 if (root == null || root.code != StatusNumberKey.Success)
                 {
+                    ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"Status: {root.code} Message: {root.data}");
                     _logger.LogError($"SaveAllShipment - Error: Status: {root.code} Message: {root.data}");
                     throw new RequestErrorException($"SaveAllShipment - Error: Status: {root.code} Message: {root.data}");
                 }
@@ -84,18 +95,17 @@ namespace Infrastructure.ImplimentService
                     bool exits = await _shippentRespostory.Exit(item.id);
                     if (exits)
                     {
-                        _logger.LogInformation($"SaveAllShipment - Info: Company Uuid: {item.id} exits in database");
+                        ConsoleLog.Log(ConsoleLog.WARNING, MethodBase.GetCurrentMethod().Name, $"Company Uuid: [YELLOW]{item.id}[YELLOW] exits in database");
                         continue;
                     }
                     Shipment company = _mapper.Map<Shipment>(item);
                     await _shippentRespostory.Create(company);
-                    companyAnalysis.shipmentId = company.Id;
-                    
                 }
                 return companyAnalysis;
             }
             catch (Exception ex)
             {
+                ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, ex.Message);
                 throw;
             }
         }

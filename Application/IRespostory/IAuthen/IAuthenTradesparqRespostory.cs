@@ -12,5 +12,6 @@ namespace Application.IRespostory.IAuthen
         Task<AuthenTradesparq> GetTokenActive();
 
         Task<bool> Create(string token, string datasource);
+        Task<bool> Deactive(int id);
     }
 }

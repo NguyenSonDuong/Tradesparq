@@ -9,6 +9,7 @@ namespace Application.IRespostory.ICommand
 {
     public interface ICommandRespostory : IBaseRespostory<Command>
     {
+        public Task<bool> CreateCommand(string typeSerach, string keySearch, DateTime FromDate, DateTime ToDate);
         public Task<Command> GetCommandQueue(); 
         public Task<bool> CloseCommand(int id);
         public Task<int> CreateCommand(Command command);

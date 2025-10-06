@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace Application.Dto.ModelDto
 {
-    public class CompanyAnalysisDto : AnalysisDto
+    public class AnalysisDto
     {
+        public int total { get; set; }
+        public int count { get; set; }
+       
     }
 }

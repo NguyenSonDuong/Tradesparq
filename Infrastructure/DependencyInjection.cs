@@ -2,6 +2,7 @@
 using Application.IRespostory;
 using Application.IRespostory.IAnalysis;
 using Application.IRespostory.IAuthen;
+using Application.IRespostory.ICommand;
 using Application.IRespostory.IInfo;
 using Application.IService;
 using Application.Respostory;
@@ -11,6 +12,7 @@ using Infrastructure.DBContext;
 using Infrastructure.ImplimentJob;
 using Infrastructure.ImplimentRespostory;
 using Infrastructure.ImplimentRespostory.Authen;
+using Infrastructure.ImplimentRespostory.CommandR;
 using Infrastructure.ImplimentRespostory.Info;
 using Infrastructure.ImplimentService;
 using Infrastructure.ImplimentService.Base;
@@ -38,7 +40,7 @@ namespace Infrastructure
                     my => my.MigrationsAssembly(migAsm));   // SQL Server: UseSqlServer(conn, b => b.MigrationsAssembly(migAsm))
                 opt.EnableSensitiveDataLogging(false);
             });
-            services.AddSingleton(typeof(AppDbContext));
+            //services.AddSingleton(typeof(AppDbContext));
             services.AddScoped<IAuthenTradesparqRespostory, AuthenTradesparqRespostory>();
 
             services.AddScoped<IEmailRespostory, EmailRespostory>();
@@ -54,6 +56,7 @@ namespace Infrastructure
             services.AddScoped<IRequestSearchHistoryRespostory, RequestSearchHistoryRespostory>();
             services.AddScoped<IShippentRespostory, ShippentRespostory>();
             services.AddScoped<ICompanyRespostory, CompanyRespostory>();
+            services.AddScoped<ICommandRespostory, CommandRespostory>();
 
             services.AddScoped<IShippentService, ShippentService>();
             services.AddScoped<ICompanyService, CompanyService>();

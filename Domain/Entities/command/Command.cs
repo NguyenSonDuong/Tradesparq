@@ -9,12 +9,12 @@ namespace Domain.Entities.command
 {
     public class Command : BaseEntity
     {
-        public bool IsDeleted { get; set; } = false;
+        public bool IsDeleted { get; set; }
         public string SearchKey { get; set; }
         public int IndexSearch { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string TypeSearch { get; set; }
-        public bool IsCompleted { get; set; } = false;
+        public bool IsCompleted { get; set; }
     }
 }

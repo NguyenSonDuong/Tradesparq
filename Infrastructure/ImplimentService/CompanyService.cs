@@ -77,13 +77,19 @@ namespace Infrastructure.ImplimentService
                     throw new RequestErrorException($"GetAllCompany - Error: Token không có vui lòng kiểm tra lại");
                 }
 
-                _requestService.Token = authen.Token;
-                _requestService.DataSource = authen.dataSourch;
+                _requestService.Token = Token;
+                _requestService.DataSource = DataSource;
 
                 // Lấy thông tin Company từ Tradesparq
                 SearchCompanyResponsivDto.Root root = await _requestService.GetCompany(searchRequestDto);
                 if(root == null || root.data == null)
                 {
+                    if(root != null && (root.code == 403 || root.code == 402))
+                    {
+                        await _authenTradesparqRespostory.Deactive(authen.Id);
+                        _logger.LogError($"GetAllCompany - Error: Token hết hạn vui lòng kiểm tra lại");
+                        throw new RequestErrorException($"GetAllCompany - Error: Token hết hạn vui lòng kiểm tra lại");
+                    }
                     throw new RequestErrorException("Lỗi gửi request tới Tradesparq");
                 }
 
@@ -105,7 +111,6 @@ namespace Infrastructure.ImplimentService
                     }
                     Company company = _mapper.Map<Company>(item);
                     await _companyRespostory.Create(company);
-                    companyAnalysis.companyId = company.Id;
                     if (item.info?.city != null)
                     {
                         int success = await _cityRespostory.CreateAll(company.Id, item.info.city);

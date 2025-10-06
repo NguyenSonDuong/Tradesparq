@@ -19,7 +19,7 @@ namespace Infrastructure.ImplimentRespostory.CommandR
         {
             try
             {
-                Command command = await _db.Commands.Where(c => c.Id == id && c.IsCompleted == true).FirstOrDefaultAsync();
+                Command command = await _db.Commands.Where(c => c.Id == id && !c.IsCompleted).FirstOrDefaultAsync();
                 if (command == null)
                 {
                     throw new Exception($"CloseCommand - Error: Not found command with id {id} or command is closed");
@@ -63,11 +63,61 @@ namespace Infrastructure.ImplimentRespostory.CommandR
             }
         }
 
+        public async Task<bool> CreateCommand(string typeSerach, string keySearch, DateTime FromDate, DateTime ToDate)
+        {
+            try
+            {
+                if (ToDate < FromDate)
+                {
+                    throw new Exception("CreateCommand - Error: ToDate must be greater than FromDate");
+                }
+                bool exists = _db.Commands
+                    .Any(c => c.TypeSearch == typeSerach 
+                    && c.SearchKey == keySearch 
+                    && c.StartDate <= FromDate && c.EndDate >= ToDate 
+                    && c.IsDeleted == false);
+                Command command;
+                if (exists)
+                {
+                    command = new Command
+                    {
+                        TypeSearch = typeSerach,
+                        SearchKey = keySearch,
+                        StartDate = FromDate,
+                        EndDate = ToDate,
+                        CreatedAt = DateTime.UtcNow,
+                        IsCompleted = true,
+                        IsDeleted = false
+                    };
+                    _db.Commands.Add(command);
+                    await _db.SaveChangesAsync();
+                    throw new Exception("CreateCommand - Error: Khoảng thời gian bạn tìm kiếm đã có dữ liệu! Vui lòng xác nhận với kỹ thuật viên để có thể chạy lệnh - Lệnh đã được lưu chờ quản trị viên duyệt");
+                }
+                command = new Command
+                {
+                    TypeSearch = typeSerach,
+                    SearchKey = keySearch,
+                    StartDate = FromDate,
+                    EndDate = ToDate,
+                    CreatedAt = DateTime.UtcNow,
+                    IsCompleted = false,
+                    IsDeleted = false
+                };
+                _db.Commands.Add(command);
+                await _db.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         public async Task<bool> Delete(int id)
         {
             try
             {
-                Command command = await _db.Commands.Where(c => c.Id == id).FirstOrDefaultAsync();
+                Command command = await _db.Commands.AsNoTracking().Where(c => c.Id == id).FirstOrDefaultAsync();
                 command.IsDeleted = true;
                 _db.Commands.Update(command);
                 await _db.SaveChangesAsync();
@@ -83,8 +133,8 @@ namespace Infrastructure.ImplimentRespostory.CommandR
         {
             try
             {
-                Command command = await _db.Commands.Where(c => c.Id == id).FirstOrDefaultAsync();
-                return command;
+                var command = await _db.Commands.AsNoTracking().Where(c => c.Id == id).ToListAsync();
+                return null;
             }
             catch(Exception ex)
             {
@@ -96,7 +146,7 @@ namespace Infrastructure.ImplimentRespostory.CommandR
         {
             try
             {
-                List<Command> listCommand = await _db.Commands.ToListAsync();
+                List<Command> listCommand = await _db.Commands.AsNoTracking().ToListAsync();
                 return listCommand;
             }
             catch(Exception ex)
@@ -110,7 +160,7 @@ namespace Infrastructure.ImplimentRespostory.CommandR
             try
             {
                 List<Command> commands = await _db.Commands
-                    .Where(c => c.IsCompleted == false)
+                    .Where(c => !c.IsCompleted && !c.IsDeleted)
                     .OrderBy(c => c.CreatedAt)
                     .ToListAsync();
                 return commands;

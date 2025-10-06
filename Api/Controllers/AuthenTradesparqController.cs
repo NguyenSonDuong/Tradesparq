@@ -1,5 +1,6 @@
 ﻿using Api.Resp;
 using Application.IRespostory.IAuthen;
+using Domain.Entities.Authen;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
@@ -20,16 +21,23 @@ namespace Api.Controllers
 
         // GET: api/<ValuesController>
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<ActionResult> Get()
         {
-            return new string[] { "value1", "value2" };
-        }
-
-        // GET api/<ValuesController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
+            try
+            {
+                List<AuthenTradesparq> list = await _authenTradesparqRespostory.GetAll();
+                return Ok(new ResponsiveMessage()
+                {
+                    StatusCode = 200,
+                    IsSuccess = true,
+                    Message = "Lấy danh sách token thành công",
+                    Data = list
+                });
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
         // POST api/<ValuesController>
@@ -65,16 +73,36 @@ namespace Api.Controllers
             }
         }
 
-        // PUT api/<ValuesController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [HttpPost("token/deactive")]
+        public async Task<ActionResult> DeactiveTokenAsync([FromQuery] int id)
         {
-        }
-
-        // DELETE api/<ValuesController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            try
+            {
+                bool isSuccess = await _authenTradesparqRespostory.Deactive(id);
+                if (!isSuccess)
+                {
+                    return BadRequest(
+                        new ResponsiveMessage()
+                        {
+                            StatusCode = 200,
+                            IsSuccess = true,
+                            Message = "Hủy token không thành công! Vui lòng kiểm tra dữ liệu đầu vào",
+                            Data = null
+                        }
+                    );
+                }
+                return Ok(new ResponsiveMessage()
+                {
+                    StatusCode = 200,
+                    IsSuccess = true,
+                    Message = "Hủy token thành công",
+                    Data = null
+                });
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
     }
 }
