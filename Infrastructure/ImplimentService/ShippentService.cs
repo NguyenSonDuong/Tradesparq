@@ -1,6 +1,7 @@
 ﻿using Application.Dto.Keys;
 using Application.Dto.ModelDto;
 using Application.Dto.Request;
+using Application.Dto.RequestDto;
 using Application.Dto.ResponsiveDto;
 using Application.IRespostory;
 using Application.IRespostory.IAnalysis;
@@ -88,6 +89,64 @@ namespace Infrastructure.ImplimentService
                     ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"Status: {root.code} Message: {root.data}");
                     _logger.LogError($"SaveAllShipment - Error: Status: {root.code} Message: {root.data}");
                     throw new RequestErrorException($"SaveAllShipment - Error: Status: {root.code} Message: {root.data}");
+                }
+                // Sau khi request thành công sẽ reset biến đếm lỗi về 0 
+                foreach (var item in root.data.docs)
+                {
+                    bool exits = await _shippentRespostory.Exit(item.id);
+                    if (exits)
+                    {
+                        ConsoleLog.Log(ConsoleLog.WARNING, MethodBase.GetCurrentMethod().Name, $"Company Uuid: [YELLOW]{item.id}[YELLOW] exits in database");
+                        continue;
+                    }
+                    Shipment company = _mapper.Map<Shipment>(item);
+                    await _shippentRespostory.Create(company);
+                }
+                return companyAnalysis;
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<ShipmentAnalysisDto> SaveShipmentOfCompany(CompanySearchRequestDto companySearchRequestDto)
+        {
+            try
+            {
+                ShipmentAnalysisDto companyAnalysis = new ShipmentAnalysisDto();
+                AuthenTradesparq authen = await _authenTradesparqRespostory.GetTokenActive();
+                if (authen == null || string.IsNullOrEmpty(authen.Token))
+                {
+                    ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"Token không có vui lòng kiểm tra lại");
+                    throw new RequestErrorException($"SaveShipmentOfCompany - Error: Token không có vui lòng kiểm tra lại");
+                }
+                _requestService.Token = authen.Token;
+                _requestService.DataSource = authen.dataSourch;
+
+                CompanySearchResposiveDto.Root root = await _requestService.GetCompanyDeatil(companySearchRequestDto);
+                if (root == null || root.data == null)
+                {
+                    if (root != null && (root.code == 403 || root.code == 402))
+                    {
+                        await _authenTradesparqRespostory.Deactive(authen.Id);
+                        ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"Token hết hạn vui lòng kiểm tra lại");
+                        _logger.LogError($"SaveShipmentOfCompany - Error: Token hết hạn vui lòng kiểm tra lại");
+                        throw new RequestErrorException($"SaveShipmentOfCompany - Error: Token hết hạn vui lòng kiểm tra lại");
+                    }
+                    ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"Lỗi gửi request tới Tradesparq");
+                    throw new RequestErrorException("SaveShipmentOfCompany - Error: Lỗi gửi request tới Tradesparq");
+                }
+
+                companyAnalysis.total = root.data.numFound;
+                companyAnalysis.count = root.data.docs.Count;
+
+                if (root == null || root.code != StatusNumberKey.Success)
+                {
+                    ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"SaveShipmentOfCompany: Status: {root.code} Message: {root.data}");
+                    _logger.LogError($"SaveShipmentOfCompany - Error: Status: {root.code} Message: {root.data}");
+                    throw new RequestErrorException($"SaveShipmentOfCompany - Error: Status: {root.code} Message: {root.data}");
                 }
                 // Sau khi request thành công sẽ reset biến đếm lỗi về 0 
                 foreach (var item in root.data.docs)

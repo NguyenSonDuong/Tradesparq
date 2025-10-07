@@ -59,11 +59,11 @@ namespace Api.Controllers
 
         // POST api/<ValuesController>
         [HttpPost("create")]
-        public async Task Post([FromQuery] string typeSearch, [FromQuery] string keysearch, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+        public async Task Create([FromQuery] string typeCommand, [FromQuery] string? comId, [FromQuery] string typeSearch, [FromQuery] string keysearch, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
         {
             try
             {
-                bool isSuccess = await _commandRespostory.CreateCommand(typeSearch, keysearch, startDate, endDate);
+                bool isSuccess = await _commandRespostory.CreateCommand(typeCommand,comId,typeSearch, keysearch, startDate, endDate);
                 if (!isSuccess)
                 {
                     throw new Exception("Create command failed");
@@ -80,12 +80,6 @@ namespace Api.Controllers
             {
                 Problem(detail: ex.Message, title: "Error creating command");
             }
-        }
-
-        // PUT api/<ValuesController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
         }
 
         // DELETE api/<ValuesController>/5

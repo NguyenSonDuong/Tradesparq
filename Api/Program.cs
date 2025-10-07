@@ -31,20 +31,27 @@ try
     // Cấu hình option cho job
     builder.Services.Configure<AutoCrawlJobOption>(builder.Configuration.GetSection("Jobs:MyJob"));
     builder.Services.AddSingleton(res => res.GetRequiredService<Microsoft.Extensions.Options.IOptions<AutoCrawlJobOption>>().Value);
-    //var cs = builder.Configuration.GetConnectionString("DefaultConnection")
-    //         ?? throw new InvalidOperationException("Missing ConnectionStrings:Default.");
-    //builder.Services.AddDbContext<AppDbContext>(opt =>
-    //{
-    //    opt.UseMySql(
-    //        cs,
-    //        ServerVersion.AutoDetect(cs),
-    //        my => my.EnableRetryOnFailure()
-    //                .MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)
-    //    );
-    //    opt.EnableSensitiveDataLogging(false);
-    //    opt.EnableDetailedErrors(true);
-    //});
-    // Đăng ký hosted service chạy nền
+
+    string[] allowedOrigins = new[]
+    {
+        "http://localhost:5173",
+        "http://app.example.com"
+    };
+
+    // Đăng ký CORS
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("DefaultCors", policy =>
+        {
+            policy.WithOrigins(allowedOrigins)      // origin cụ thể
+                  .AllowAnyHeader()                 // cho mọi header
+                  .AllowAnyMethod()                 // GET/POST/PUT/DELETE...
+                  .AllowCredentials()               // nếu cần cookie/bearer qua cross-site
+                  .WithExposedHeaders("X-Total-Count")  // header client có thể đọc
+                  .SetPreflightMaxAge(TimeSpan.FromHours(12)); // cache preflight
+        });
+    });
+
     builder.Services.AddHostedService<AutoCrawlJobService>();
     builder.Logging.AddSimpleConsole(o =>
     {
@@ -85,7 +92,7 @@ try
             }
         }
     }
-
+    app.UseCors("DefaultCors");
     app.UseHttpsRedirection();
 
     app.UseAuthorization();

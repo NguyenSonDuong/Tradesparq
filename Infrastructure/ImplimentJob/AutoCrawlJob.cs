@@ -1,6 +1,7 @@
 ﻿using Application.Dto.Keys;
 using Application.Dto.ModelDto;
 using Application.Dto.Request;
+using Application.Dto.RequestDto;
 using Application.IJob;
 using Application.IRespostory.IAnalysis;
 using Application.IRespostory.ICommand;
@@ -61,19 +62,15 @@ namespace Infrastructure.ImplimentJob
                 {
                     try
                     {
-                        int page = 1;
-                        while (true)
+                        if(command.TypeCommand.Equals(TypeCommand.SEARCH_COMPANY_DETAIL))
                         {
-                            bool isSuccess = await RunJobSearchCompanyOrShipmment(command,page,ct);
-                            if (isSuccess)
-                            {
-                                await Task.Delay(randomInt.Next(2000, 5000));
-                                page++;
-                            }
-                            
+                            bool isSuccess = await RunJobSearchCompanyDetail(command, ct);
                         }
-                        // sau khi hoàn thành 1 command sẽ đóng lệnh lại
-                        await _commandRespostory.CloseCommand(command.Id);
+                        else
+                        {
+                            await RunJobSearchCompanyOrShipmment(command, ct);
+                        }
+                       await _commandRespostory.CloseCommand(command.Id);
                     }
                     catch (Exception ex)
                     {
@@ -90,84 +87,171 @@ namespace Infrastructure.ImplimentJob
                 throw;
             }
         }
-
-        public async Task<bool> RunJobSearchCompanyOrShipmment(Command command, int page,CancellationToken ct)
+        public async Task<bool> RunJobSearchCompanyDetail(Command command, CancellationToken ct)
         {
-            ConsoleLog.Log(ConsoleLog.INFO, MethodBase.GetCurrentMethod().Name, $"Start get company in {ConsoleLog.RED_REPLATE}{page}{ConsoleLog.NORMAL_REPLATE}");
-            try
+            int page = 1;
+            while (true)
             {
-                Command command1 = await _commandRespostory.Get(command.Id);
-                if (command1.IsCompleted || command1.IsDeleted)
+                ConsoleLog.Log(ConsoleLog.INFO, MethodBase.GetCurrentMethod().Name, $"Start get company detail in {ConsoleLog.RED_REPLATE}{page}{ConsoleLog.NORMAL_REPLATE}");
+                try
                 {
-                    throw new Exception("Lệnh này đã được chạy xong! chờ đến lệnh tiếp theo");
-                }
-                // TODO: gọi repo/service thật của bạn ở đây
-                SearchRequestDto.Root requestRoot = new SearchRequestDto.Root();
-                requestRoot.filter_field = null;
-                requestRoot.dataSource = "00111100001111011111111111111111111111001111110110011111110111111011111111111111111111111111111101111011001111111111011111111111111000011111111111111111100001110000000000000000000000000000";
-                requestRoot.date = new List<string>();
-                requestRoot.date.Add(command.StartDate.ToString("yyyy-MM-dd"));
-                requestRoot.date.Add(command.EndDate.ToString("yyyy-MM-dd"));
-                requestRoot.order = "desc";
-                requestRoot.page = page;
-                requestRoot.page_size = 20;
-                requestRoot.prod_desc = command.SearchKey;
-                requestRoot.result_type = command.TypeSearch;
-                if (command.TypeSearch.Equals(SearchProdDesc.Company))
-                    requestRoot.result_type_need_num = true;
-                requestRoot.source_type = 1;
-                AnalysisDto analysisDto = null;
-                if (command.TypeSearch.Equals(SearchProdDesc.Company))
-                {
-                    analysisDto = await _companyService.SaveAllCompany(requestRoot);
-                }
-                if (command.TypeSearch.Equals(SearchProdDesc.Shippent))
-                {
-                    analysisDto = await _shippentService.SaveAllShipment(requestRoot);
-                }
+                    Command command1 = await _commandRespostory.Get(command.Id);
+                    if (command1.IsCompleted || command1.IsDeleted)
+                    {
+                        throw new Exception("Lệnh này đã được chạy xong! chờ đến lệnh tiếp theo");
+                    }
+                    // TODO: gọi repo/service thật của bạn ở đây
+                    CompanySearchRequestDto requestRoot = new CompanySearchRequestDto();
+                    requestRoot.dataSource = "00111100001111011111111111111111111111001111110110011111110111111011111111111111111111111111111101111011001111111111011111111111111000011111111111111111100001110000000000000000000000000000";
+                    requestRoot.date = new List<string>();
+                    requestRoot.date.Add(command.StartDate.ToString("yyyy-MM-dd"));
+                    requestRoot.date.Add(command.EndDate.ToString("yyyy-MM-dd"));
+                    requestRoot.order = "desc";
+                    requestRoot.page = page;
+                    requestRoot.page_size = 20;
+                    requestRoot.com_role = command.TypeSearch;
+                    requestRoot.result_type = SearchProdDesc.Shippent;
+                    requestRoot.com_id = new List<string>();
+                    if(string.IsNullOrEmpty(command.ComId))
+                    {
+                        ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"Com Id không tồn tại! Cập nhật Com_id");
+                        continue;
+                    }
+                    requestRoot.com_id.Add(command.ComId);
 
-                if (analysisDto == null)
-                {
-                    ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"Error call request and save: {ConsoleLog.RED_REPLATE}{analysisDto.total * page}{ConsoleLog.NORMAL_REPLATE}");
-                }
-                if (page * 20 >= analysisDto.total)
-                {
-                    ConsoleLog.Log(ConsoleLog.INFO, MethodBase.GetCurrentMethod().Name, $"Save data count: {ConsoleLog.RED_REPLATE}{analysisDto.total * page}{ConsoleLog.NORMAL_REPLATE}");
-                    ConsoleLog.Log(ConsoleLog.INFO, MethodBase.GetCurrentMethod().Name, $"MyJob end at {ConsoleLog.YELLOW}{DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}{ConsoleLog.NORMAL_REPLATE}");
+                    requestRoot.source_type = 1;
 
-                    _log.LogInformation("MyJob end at {time:O}", DateTime.UtcNow);
-                    return true;
-                }
-                ConsoleLog.Log(ConsoleLog.INFO, MethodBase.GetCurrentMethod().Name, $"Save data: {ConsoleLog.RED_REPLATE}{analysisDto.count * page}{ConsoleLog.NORMAL_REPLATE}");
-                await _requestSearchHistoryRespostory.Create(new RequestSearchHisory
-                {
-                    PageNumber = page,
-                    CommandId = command.Id,
-                    ExDataSearch = $"Save data: {ConsoleLog.RED_REPLATE}{analysisDto.count * page}{ConsoleLog.NORMAL_REPLATE}",
-                    IsDeleted = false,
-                    IsSuccess = true,
-                    StatusCode = StatusNumberKey.Success
-                });
-                return true;
-            }
-            catch (Exception ex)
-            {
-                ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"Error call request and save: Pause 5s");
-                ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"{ex.Message}");
+                    AnalysisDto analysisDto = null;
+                    if (command.TypeCommand.Equals(TypeCommand.SEARCH_COMPANY_DETAIL))
+                    {
+                        analysisDto = await _shippentService.SaveShipmentOfCompany(requestRoot);
+                    }
 
-                await _requestSearchHistoryRespostory.Create(new RequestSearchHisory
+                    if (analysisDto == null)
+                    {
+                        ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"Error call request and save: {ConsoleLog.RED_REPLATE}{analysisDto.total * page}{ConsoleLog.NORMAL_REPLATE}");
+                    }
+                    if (page * 20 >= analysisDto.total)
+                    {
+                        ConsoleLog.Log(ConsoleLog.INFO, MethodBase.GetCurrentMethod().Name, $"Save data count: {ConsoleLog.RED_REPLATE}{analysisDto.total * page}{ConsoleLog.NORMAL_REPLATE}");
+                        ConsoleLog.Log(ConsoleLog.INFO, MethodBase.GetCurrentMethod().Name, $"MyJob end at {ConsoleLog.YELLOW}{DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}{ConsoleLog.NORMAL_REPLATE}");
+
+                        _log.LogInformation("MyJob end at {time:O}", DateTime.UtcNow);
+                        return true;
+                    }
+                    ConsoleLog.Log(ConsoleLog.INFO, MethodBase.GetCurrentMethod().Name, $"Save data: {ConsoleLog.RED_REPLATE}{analysisDto.count * page}{ConsoleLog.NORMAL_REPLATE}");
+                    await _requestSearchHistoryRespostory.Create(new RequestSearchHisory
+                    {
+                        PageNumber = page,
+                        CommandId = command.Id,
+                        ExDataSearch = $"Save data: {ConsoleLog.RED_REPLATE}{analysisDto.count * page}{ConsoleLog.NORMAL_REPLATE}",
+                        IsDeleted = false,
+                        IsSuccess = true,
+                        StatusCode = StatusNumberKey.Success
+                    });
+                    page++;
+                }
+                catch (Exception ex)
                 {
-                    PageNumber = page,
-                    CommandId = command.Id,
-                    ExDataSearch = ex.Message,
-                    IsDeleted = false,
-                    IsSuccess = false,
-                    StatusCode = StatusNumberKey.Success,
-                });
-                await Task.Delay(5000);
-                return false;
+                    ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"Error call request and save: Pause 5s");
+                    ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"{ex.Message}");
+
+                    await _requestSearchHistoryRespostory.Create(new RequestSearchHisory
+                    {
+                        PageNumber = page,
+                        CommandId = command.Id,
+                        ExDataSearch = ex.Message,
+                        IsDeleted = false,
+                        IsSuccess = false,
+                        StatusCode = StatusNumberKey.Success,
+                    });
+                    await Task.Delay(5000);
+                    return false;
+                }
             }
         }
+        public async Task<bool> RunJobSearchCompanyOrShipmment(Command command,CancellationToken ct)
+        {
+            int page = 1;
+            while (true)
+            {
+                ConsoleLog.Log(ConsoleLog.INFO, MethodBase.GetCurrentMethod().Name, $"Start get company in {ConsoleLog.RED_REPLATE}{page}{ConsoleLog.NORMAL_REPLATE}");
+                try
+                {
+                    Command command1 = await _commandRespostory.Get(command.Id);
+                    if (command1.IsCompleted || command1.IsDeleted)
+                    {
+                        throw new Exception("Lệnh này đã được chạy xong! chờ đến lệnh tiếp theo");
+                    }
+                    // TODO: gọi repo/service thật của bạn ở đây
+                    SearchRequestDto.Root requestRoot = new SearchRequestDto.Root();
+                    requestRoot.filter_field = null;
+                    requestRoot.dataSource = "00111100001111011111111111111111111111001111110110011111110111111011111111111111111111111111111101111011001111111111011111111111111000011111111111111111100001110000000000000000000000000000";
+                    requestRoot.date = new List<string>();
+                    requestRoot.date.Add(command.StartDate.ToString("yyyy-MM-dd"));
+                    requestRoot.date.Add(command.EndDate.ToString("yyyy-MM-dd"));
+                    requestRoot.order = "desc";
+                    requestRoot.page = page;
+                    requestRoot.page_size = 20;
+                    requestRoot.prod_desc = command.SearchKey;
+                    requestRoot.result_type = command.TypeSearch;
+                    if (command.TypeCommand.Equals(TypeCommand.SEARCH_COMPANY))
+                        requestRoot.result_type_need_num = true;
+                    requestRoot.source_type = 1;
 
+                    AnalysisDto analysisDto = null;
+                    if (command.TypeCommand.Equals(TypeCommand.SEARCH_COMPANY))
+                    {
+                        analysisDto = await _companyService.SaveAllCompany(requestRoot);
+                    }
+                    if (command.TypeCommand.Equals(TypeCommand.SEARCH_SHIPMENT))
+                    {
+                        analysisDto = await _shippentService.SaveAllShipment(requestRoot);
+                    }
+
+                    if (analysisDto == null)
+                    {
+                        ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"Error call request and save: {ConsoleLog.RED_REPLATE}{analysisDto.total * page}{ConsoleLog.NORMAL_REPLATE}");
+                    }
+                    if (page * 20 >= analysisDto.total)
+                    {
+                        ConsoleLog.Log(ConsoleLog.INFO, MethodBase.GetCurrentMethod().Name, $"Save data count: {ConsoleLog.RED_REPLATE}{analysisDto.total * page}{ConsoleLog.NORMAL_REPLATE}");
+                        ConsoleLog.Log(ConsoleLog.INFO, MethodBase.GetCurrentMethod().Name, $"MyJob end at {ConsoleLog.YELLOW}{DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}{ConsoleLog.NORMAL_REPLATE}");
+
+                        _log.LogInformation("MyJob end at {time:O}", DateTime.UtcNow);
+                        return true;
+                    }
+                    ConsoleLog.Log(ConsoleLog.INFO, MethodBase.GetCurrentMethod().Name, $"Save data: {ConsoleLog.RED_REPLATE}{analysisDto.count * page}{ConsoleLog.NORMAL_REPLATE}");
+                    await _requestSearchHistoryRespostory.Create(new RequestSearchHisory
+                    {
+                        PageNumber = page,
+                        CommandId = command.Id,
+                        ExDataSearch = $"Save data: {ConsoleLog.RED_REPLATE}{analysisDto.count * page}{ConsoleLog.NORMAL_REPLATE}",
+                        IsDeleted = false,
+                        IsSuccess = true,
+                        StatusCode = StatusNumberKey.Success
+                    });
+                    page++;
+                }
+                catch (Exception ex)
+                {
+                    ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"Error call request and save: Pause 5s");
+                    ConsoleLog.Log(ConsoleLog.ERROR, MethodBase.GetCurrentMethod().Name, $"{ex.Message}");
+
+                    await _requestSearchHistoryRespostory.Create(new RequestSearchHisory
+                    {
+                        PageNumber = page,
+                        CommandId = command.Id,
+                        ExDataSearch = ex.Message,
+                        IsDeleted = false,
+                        IsSuccess = false,
+                        StatusCode = StatusNumberKey.Success,
+                    });
+                    await Task.Delay(5000);
+                    return false;
+                }
+            }
+            
+        }
     }
 }

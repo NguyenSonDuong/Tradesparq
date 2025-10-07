@@ -1,4 +1,5 @@
 ﻿using Application.Dto.Request;
+using Application.Dto.RequestDto;
 using Application.Dto.ResponsiveDto;
 using CrawlService.Dto.Responsive;
 using System;
@@ -13,5 +14,6 @@ namespace Application.IService
     {
         Task<SearchCompanyResponsivDto.Root> GetCompany(SearchRequestDto.Root searchRequestDto);
         Task<SearchResponsiveDto.Root> GetShipment(SearchRequestDto.Root searchRequestDto);
+        Task<CompanySearchResposiveDto.Root> GetCompanyDeatil(CompanySearchRequestDto searchRequestDto);
     }
 }

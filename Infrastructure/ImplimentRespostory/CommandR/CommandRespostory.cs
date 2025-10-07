@@ -63,7 +63,7 @@ namespace Infrastructure.ImplimentRespostory.CommandR
             }
         }
 
-        public async Task<bool> CreateCommand(string typeSerach, string keySearch, DateTime FromDate, DateTime ToDate)
+        public async Task<bool> CreateCommand(string typeCommand, string? comId, string typeSerach, string keySearch, DateTime FromDate, DateTime ToDate)
         {
             try
             {
@@ -81,6 +81,8 @@ namespace Infrastructure.ImplimentRespostory.CommandR
                 {
                     command = new Command
                     {
+                        ComId = comId,
+                        TypeCommand = typeCommand,
                         TypeSearch = typeSerach,
                         SearchKey = keySearch,
                         StartDate = FromDate,
@@ -95,6 +97,7 @@ namespace Infrastructure.ImplimentRespostory.CommandR
                 }
                 command = new Command
                 {
+                    TypeCommand = typeCommand,
                     TypeSearch = typeSerach,
                     SearchKey = keySearch,
                     StartDate = FromDate,
@@ -103,6 +106,10 @@ namespace Infrastructure.ImplimentRespostory.CommandR
                     IsCompleted = false,
                     IsDeleted = false
                 };
+                if (!string.IsNullOrEmpty(comId))
+                {
+                    command.ComId = comId;
+                }
                 _db.Commands.Add(command);
                 await _db.SaveChangesAsync();
                 return true;

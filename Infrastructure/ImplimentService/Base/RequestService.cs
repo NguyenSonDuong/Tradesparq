@@ -1,5 +1,6 @@
 ﻿using Application.Dto.Keys;
 using Application.Dto.Request;
+using Application.Dto.RequestDto;
 using Application.Dto.ResponsiveDto;
 using Application.IService;
 using CrawlService.Controller;
@@ -83,6 +84,25 @@ namespace Infrastructure.ImplimentService.Base
                 HttpResponseMessage httpResponse = await _apiBaseController.RequestAsync(httpRequestSettingDto.Build());
                 string httpRpString = await ApiBaseController.ResponsiveMapping(httpResponse, httpRequestSettingDto.Build());
                 SearchResponsiveDto.Root root = JsonConvert.DeserializeObject<SearchResponsiveDto.Root>(httpRpString);
+                return root;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+        public async Task<CompanySearchResposiveDto.Root> GetCompanyDeatil(CompanySearchRequestDto searchRequestDto)
+        {
+            try
+            {
+                HttpRequestSettingDtoBuilder httpRequestSettingDto = new HttpRequestSettingDtoBuilder()
+                     .SetPath(PathKey.SearchCompanyDetailPath)
+                     .SetMethod(ApiMethodEnum.POST)
+                     .AddHeader("ts-token", Token)
+                     .SetBody(searchRequestDto);
+                HttpResponseMessage httpResponse = await _apiBaseController.RequestAsync(httpRequestSettingDto.Build());
+                string httpRpString = await ApiBaseController.ResponsiveMapping(httpResponse, httpRequestSettingDto.Build());
+                CompanySearchResposiveDto.Root root = JsonConvert.DeserializeObject<CompanySearchResposiveDto.Root>(httpRpString);
                 return root;
             }
             catch (Exception ex)

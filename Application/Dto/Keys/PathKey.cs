@@ -9,5 +9,6 @@ namespace Application.Dto.Keys
     public class PathKey
     {
         public static string SearchCompanyPath = "data_v2/search";
+        public static string SearchCompanyDetailPath = "data_v2/search/company";
     }
 }
